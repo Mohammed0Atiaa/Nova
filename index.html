@@ -1,5 +1,5 @@
 <!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>حساب نوفا</title>
+<title>المحاسب الذكي</title>
 <style>
 :root{--b:#060814;--c:#22e3ff;--v:#9b6bff;--t:#e8f1ff;--m:#8b9dc3}
 *{box-sizing:border-box}body{margin:0;font:15px Tahoma,Segoe UI,sans-serif;color:var(--t);min-height:100vh;background:radial-gradient(circle at 15% 0,#1b1f54,transparent 45%),radial-gradient(circle at 95% 100%,#301060,transparent 40%),var(--b)}
@@ -21,13 +21,28 @@ table{width:100%;border-collapse:collapse}th,td{padding:8px;border-bottom:1px so
 .tag{background:#ff7a9022;color:#ff7a90;padding:2px 8px;border-radius:6px;font-size:12px}
 a.lnk{color:var(--c);cursor:pointer;font-size:13px}
 @media print{#top,nav,.np{display:none!important}body{background:#fff;color:#000}.card{background:#fff;border:0;color:#000}th,.k{color:#000}td,th{border-bottom:1px solid #999}}
+.doc{background:#fff;color:#1a1a2e;border-radius:10px;padding:28px;max-width:680px;margin:0 auto;font-family:Tahoma,Segoe UI,sans-serif}
+.doc h2{margin:0 0 2px;font-size:22px;color:#1a1a2e}
+.doc .sub{color:#666;font-size:13px;margin:0 0 14px}
+.doc h3{margin:0 0 4px;font-size:17px;color:#0b5;display:inline-block;border-bottom:2px solid #0b5;padding-bottom:2px}
+.doc .meta{background:#f4f6fb;border:1px solid #e3e7f0;border-radius:8px;padding:10px 14px;margin:12px 0;font-size:13px;color:#333;display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:6px}
+.doc table{width:100%;border-collapse:collapse;margin:14px 0;font-size:14px}
+.doc th{background:#1a1a2e;color:#fff;padding:8px;text-align:right}
+.doc td{padding:8px;border-bottom:1px solid #e3e7f0;color:#222}
+.doc tr:nth-child(even) td{background:#f8f9fc}
+.doc .tot{display:flex;justify-content:flex-end;margin-top:8px}
+.doc .tot table{width:auto;min-width:220px}
+.doc .tot td{border:0;padding:4px 10px}
+.doc .tot .grand td{font-size:17px;font-weight:bold;border-top:2px solid #1a1a2e;color:#1a1a2e}
+.doc .foot{margin-top:20px;color:#999;font-size:12px;text-align:center;border-top:1px dashed #ddd;padding-top:10px}
+.docwrap .np{max-width:680px;margin:8px auto 0;display:flex;gap:8px}
 </style></head><body>
-<div id="login"><div class="card"><h1 style="margin:0">حساب نوفا</h1><div id="mode1"><input id="em" type="email" placeholder="البريد الإلكتروني" autocomplete="username"><input id="pw" type="password" placeholder="كلمة المرور" autocomplete="current-password"><button class="go" onclick="login()">دخول</button>
+<div id="login"><div class="card"><h1 style="margin:0">المحاسب الذكي</h1><p style="color:var(--m);margin:0 0 8px;font-size:12px">AI · يدعم XBRL</p><div id="mode1"><input id="em" type="email" placeholder="البريد الإلكتروني" autocomplete="username"><input id="pw" type="password" placeholder="كلمة المرور" autocomplete="current-password"><button class="go" onclick="login()">دخول</button>
 <a class="lnk" onclick="fp()">نسيت كلمة المرور؟</a><a class="lnk" onclick="sw()">موظف جديد؟ سجّل بكود الشركة</a></div>
 <div id="mode2" hidden><input id="nm" placeholder="اسمك"><input id="em2" type="email" placeholder="البريد الإلكتروني"><input id="pw2" type="password" placeholder="كلمة مرور (6 أحرف فأكثر)"><input id="cc" placeholder="كود الشركة (من المدير)"><button class="go" onclick="signup()">تسجيل</button><a class="lnk" onclick="sw()">لديك حساب؟ دخول</a></div>
 <div id="msg"></div></div></div>
 <div id="pending" hidden><div class="card" style="max-width:420px;margin:20vh auto;text-align:center"><h3>حسابك بانتظار تفعيل المدير</h3><p>راجع مديرك ليفعّل حسابك ويحدد دورك.</p><button onclick="sb.auth.signOut().then(()=>location.reload())">خروج</button></div></div>
-<div id="app" hidden><div id="top"><div class="brand"><h1>حساب نوفا</h1><span id="coname"></span></div><span><span id="who"></span> <button onclick="sb.auth.signOut().then(()=>location.reload())">خروج</button></span></div><nav id="nav"></nav><main id="out"></main></div>
+<div id="app" hidden><div id="top"><div class="brand"><h1>المحاسب الذكي</h1><span style="display:block;font-size:11px;color:var(--m)">AI · يدعم XBRL</span><span id="coname"></span></div><span><span id="who"></span> <button onclick="sb.auth.signOut().then(()=>location.reload())">خروج</button></span></div><nav id="nav"></nav><main id="out"></main></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -61,20 +76,27 @@ function dash(){const s=D.invoices.filter(v=>v.kind=='sale'),td=s.filter(v=>v.da
 /* ---------- الفواتير ---------- */
 function invForm(){lines=[];const ks=me.role=='seller'?['sale']:Object.keys(K);
  out(`<div class="card"><h3>فاتورة جديدة</h3><div class="g">${sel('k','النوع',ks.map(k=>[k,K[k]]))}${sel('w','المخزن',D.warehouses.map(w=>[w.id,w.name]))}${sel('p','الطرف',[['','—'],...D.partners.map(p=>[p.id,p.name])])}${sel('m','الدفع',Object.entries(M))}<label>التاريخ<input id="d" type="date" value="${today()}"></label><label>خصم<input id="x" type="number" value="0"></label></div>
- <div class="g">${sel('i','الصنف',D.items.map(i=>[i.id,i.name]),'fillP()')}<label>الكمية<input id="q" type="number" step="any"></label><label>السعر<input id="r" type="number" step="any"></label><button onclick="addL()">+ إضافة</button></div><div id="ls"></div><button class="go" onclick="saveInv()">حفظ الفاتورة</button></div>`);fillP();drawL()}
-function fillP(){const i=D.items.find(x=>x.id==$('i').value);if(i&&$('k').value!='purchase')$('r').value=i.price}
+ <div class="g">${sel('i','الصنف',D.items.map(i=>[i.id,i.name]),'fillP()')}<label>الكمية<input id="q" type="number" step="any"></label><label>السعر<input id="r" type="number" step="any"></label><button onclick="addL()">+ إضافة</button></div><div id="sk"></div><div id="ls"></div><button class="go" onclick="saveInv()">حفظ الفاتورة</button></div>`);fillP();drawL()}
+function fillP(){const i=D.items.find(x=>x.id==$('i').value);if(i&&$('k').value!='purchase')$('r').value=i.price;showStk()}
+function showStk(){const id=$('i').value;if(!id)return $('sk').innerHTML='';
+ const rows=D.warehouses.map(w=>[w.name,f((D.stock.find(s=>s.warehouse_id==w.id&&s.item_id==id)||{qty:0}).qty)]),tot=D.stock.filter(s=>s.item_id==id).reduce((s,x)=>s+ +x.qty,0);
+ $('sk').innerHTML='<p style="color:var(--m);font-size:13px">'+rows.map(r=>r[0]+': '+r[1]).join(' | ')+' — <b style="color:var(--c)">الإجمالي: '+f(tot)+'</b></p>'}
 function addL(){const id=$('i').value,q=+$('q').value,r=+$('r').value;if(!(q>0)||r<0)return alert('أدخل كمية وسعراً صحيحين');
- if(['sale','purchase_return'].includes($('k').value)){const a=(D.stock.find(s=>s.warehouse_id==$('w').value&&s.item_id==id)||{qty:0}).qty-lines.filter(l=>l.item_id==id).reduce((s,l)=>s+l.qty,0);if(q>a)return alert('المتاح: '+f(a))}
+ if(['sale','purchase_return'].includes($('k').value)){const tot=D.stock.filter(s=>s.item_id==id).reduce((s,x)=>s+ +x.qty,0)-lines.filter(l=>l.item_id==id).reduce((s,l)=>s+l.qty,0);if(q>tot)return alert('إجمالي المتاح بكل المخازن: '+f(tot))}
  lines.push({item_id:id,qty:q,price:r});drawL()}
 function drawL(){const t=lines.reduce((s,l)=>s+l.qty*l.price,0);$('ls').innerHTML=tbl(['الصنف','الكمية','السعر','الإجمالي',''],lines.map((l,i)=>[esc(nm('items',l.item_id)),f(l.qty),f(l.price),f(l.qty*l.price),`<button onclick="lines.splice(${i},1);drawL()">حذف</button>`]))+`<h3>الإجمالي قبل الخصم: ${f(t)}</h3>`}
 async function saveInv(){if(!lines.length)return alert('أضف صنفاً');
  const{data,error}=await sb.rpc('save_invoice',{h:{kind:$('k').value,date:$('d').value,partner_id:$('p').value,warehouse_id:$('w').value,method:$('m').value,discount:+$('x').value||0},ls:lines});
  if(error)return alert(error.message);await load();viewInv(data)}
 function pdfBar(id){return `<div class="np" style="display:flex;gap:8px"><button onclick="window.print()">🖨️ طباعة</button><button class="go" onclick="toPDF('${id}')">⬇️ تحويل PDF</button></div>`}
-function toPDF(id){html2pdf().from(document.getElementById(id)).set({filename:id+'.pdf',margin:8}).save()}
+function toPDF(id){html2pdf().from(document.getElementById(id)).set({filename:id+'.pdf',margin:0,html2canvas:{scale:2,backgroundColor:'#ffffff'},jsPDF:{unit:'mm',format:'a4'}}).save()}
 function viewInv(no){const v=D.invoices.find(x=>x.no==no),L=D.invoice_lines.filter(l=>l.invoice_id==v.id),ed=v.updated_by?`<p class="tag">عُدّلت بواسطة: ${RN[v.updated_role]||v.updated_role}</p>`:'';
- out(`<div class="card" id="pv"><h2>${esc(co.name)}</h2><p style="color:var(--m)">${esc(co.phone||'')} ${esc(co.address||'')}</p><h3>${K[v.kind]} رقم ${v.no}</h3><p>التاريخ: ${v.date} | المخزن: ${esc(nm('warehouses',v.warehouse_id))} | الطرف: ${esc(nm('partners',v.partner_id))} | الدفع: ${M[v.method]}</p>
- ${tbl(['الصنف','الكمية','السعر','الإجمالي'],L.map(l=>[esc(nm('items',l.item_id)),f(l.qty),f(l.price),f(l.qty*l.price)]))}<h3>خصم: ${f(v.discount)} — الصافي: ${f(v.total)}</h3>${ed}${pdfBar('pv')}</div>`)}
+ out(`<div class="docwrap"><div class="doc" id="pv"><h2>${esc(co.name)}</h2><p class="sub">${esc(co.phone||'')}${co.phone&&co.address?' | ':''}${esc(co.address||'')}</p>
+ <h3>${K[v.kind]} رقم ${v.no}</h3>
+ <div class="meta"><span>📅 التاريخ: ${v.date}</span><span>🏬 المخزن: ${esc(nm('warehouses',v.warehouse_id))}</span><span>👤 الطرف: ${esc(nm('partners',v.partner_id))||'—'}</span><span>💳 الدفع: ${M[v.method]}</span></div>
+ ${tbl(['الصنف','الكمية','السعر','الإجمالي'],L.map(l=>[esc(nm('items',l.item_id)),f(l.qty),f(l.price),f(l.qty*l.price)]))}
+ <div class="tot"><table><tr><td>الإجمالي قبل الخصم</td><td>${f(L.reduce((s,l)=>s+l.qty*l.price,0))}</td></tr><tr><td>الخصم</td><td>${f(v.discount)}</td></tr><tr class="grand"><td>الصافي</td><td>${f(v.total)}</td></tr></table></div>
+ ${ed}<div class="foot">شكراً لتعاملكم معنا</div></div>${pdfBar('pv')}</div>`)}
 function invList(){out(`<div class="card"><h3>الفواتير</h3>${tbl(['رقم','النوع','التاريخ','الطرف','الصافي',''],[...D.invoices].sort((a,b)=>b.no-a.no).map(v=>[v.no,K[v.kind],v.date,esc(nm('partners',v.partner_id)),f(v.total),`<button onclick="viewInv(${v.no})">عرض</button>`]))}</div>`)}
 /* ---------- شاشات الإدخال ---------- */
 const ENT={items:['الأصناف',[['name','الاسم'],['unit','الوحدة'],['price','سعر البيع','number']]],
@@ -89,9 +111,17 @@ function crud(t){const[ti,F]=ENT[t];const extra=t=='items'?'<button onclick="imp
 async function addR(t){const o={company_id:me.company_id};ENT[t][1].forEach(([k,,ty])=>{let v=$('f_'+k).value;o[k]=v===''?null:ty=='number'?+v:v});const{error}=await sb.from(t).insert(o);if(error)return alert(error.message);await load();crud(t)}
 async function delR(t,id){if(!confirm('حذف نهائي؟'))return;const{error}=await sb.from(t).delete().eq('id',id);if(error)return alert(error.message);await load();crud(t)}
 function impXlsx(){const inp=document.createElement('input');inp.type='file';inp.accept='.xlsx,.xls,.csv';
- inp.onchange=async()=>{const wb=XLSX.read(await inp.files[0].arrayBuffer());const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
-  const items=rows.map(r=>({company_id:me.company_id,name:r['الاسم']||r['name'],unit:r['الوحدة']||r['unit']||'قطعة',price:+(r['السعر']||r['price']||0)})).filter(x=>x.name);
-  if(!items.length)return alert('لم يتم العثور على أعمدة الاسم/السعر');const{error}=await sb.from('items').insert(items);if(error)return alert(error.message);await load();crud('items')};inp.click()}
+ inp.onchange=async()=>{const wb=XLSX.read(await inp.files[0].arrayBuffer());const sheet=wb.Sheets[wb.SheetNames[0]];
+  const rows=XLSX.utils.sheet_to_json(sheet,{defval:''});const cols=XLSX.utils.sheet_to_json(sheet,{header:1});
+  const pick=(o,keys)=>{for(const k of Object.keys(o)){const kk=k.trim().toLowerCase();if(keys.includes(kk))return o[k]}return''};
+  let items=rows.map(r=>({company_id:me.company_id,
+    name:pick(r,['الاسم','اسم','name','اسم الصنف','product'])||'',
+    unit:pick(r,['الوحدة','وحدة','unit'])||'قطعة',
+    price:+(pick(r,['السعر','سعر','price','سعر البيع'])||0)})).filter(x=>x.name);
+  if(!items.length&&cols.length){ // خطة بديلة: أول عمود اسم، تاني عمود سعر، بلا اعتماد على العناوين
+   items=cols.slice(1).filter(r=>r&&r[0]).map(r=>({company_id:me.company_id,name:String(r[0]),unit:'قطعة',price:+(r[1]||0)}));}
+  if(!items.length)return alert('لم يتم العثور على بيانات صالحة. تأكد أن أول عمود هو الاسم، والثاني السعر.');
+  const{error}=await sb.from('items').insert(items);if(error)return alert(error.message);await load();crud('items')};inp.click()}
 /* ---------- إدارة الموظفين (المدير فقط) ---------- */
 function team(){out(`<div class="card"><h3>موظفو الشركة</h3><p>كود الدعوة: <b>${esc(co.invite_code)}</b> — أعطه لأي موظف جديد ليسجّل به.</p>
  ${tbl(['الاسم','الدور','الحالة',''],D.__profiles.map(p=>[esc(p.name),RN[p.role],p.active?'مفعّل':'معلّق',p.id==me.id?'':`
@@ -112,7 +142,7 @@ function calc(from,to){const b={};journal(from,to).forEach(e=>{b[e[2]]=(b[e[2]]|
  const as=[['الصندوق',g('الصندوق')],['البنك',g('البنك')],['العملاء',g('العملاء')],['المخزون',g('المخزون')]];return{b,rev,cg,ex,net:rev-cg-ex,as,ta:as.reduce((s,x)=>s+x[1],0),ap:-g('الموردون'),cap:-g('رأس المال')}}
 function reports(){out(`<div class="card np"><h3>التقارير</h3><div class="g"><label>من<input id="a" type="date"></label><label>إلى<input id="t" type="date" value="${today()}"></label>${sel('pp','الطرف (لكشف الحساب)',D.partners.map(p=>[p.id,p.name]))}</div>
  <div class="g"><button onclick="rep('pl')">قائمة الدخل</button><button onclick="rep('tb')">ميزان المراجعة</button><button onclick="rep('bs')">الميزانية</button><button onclick="rep('jr')">اليومية</button><button onclick="rep('st')">كشف حساب</button><button onclick="rep('it')">مبيعات حسب الصنف</button></div></div><div id="rp"></div>`)}
-function rep(m){const a=$('a').value,t=$('t').value,c=calc(m=='bs'?'':a,t),H=x=>`<div class="card" id="rv">${x}${pdfBar('rv')}</div>`;let h='<h2>'+esc(co.name)+'</h2>';
+function rep(m){const a=$('a').value,t=$('t').value,c=calc(m=='bs'?'':a,t),H=x=>`<div class="docwrap"><div class="doc" id="rv">${x}</div>${pdfBar('rv')}</div>`;let h='<h2>'+esc(co.name)+'</h2>';
  if(m=='pl')h+=`<h3>قائمة الدخل ${a} → ${t}</h3>`+tbl(['البند','القيمة'],[['الإيرادات',f(c.rev)],['تكلفة المبيعات',f(c.cg)],['مجمل الربح',f(c.rev-c.cg)],['المصروفات',f(c.ex)],['<b>صافي الربح</b>','<b>'+f(c.net)+'</b>']]);
  if(m=='tb')h+='<h3>ميزان المراجعة</h3>'+tbl(['الحساب','مدين','دائن'],Object.entries(c.b).map(([k,v])=>[k,v>0?f(v):'',v<0?f(-v):'']));
  if(m=='bs'){const eq=c.cap+c.net;h+=`<h3>الميزانية في ${t}</h3>`+tbl(['الأصول',''],[...c.as.map(x=>[x[0],f(x[1])]),['<b>الإجمالي</b>',f(c.ta)]])+tbl(['الخصوم وحقوق الملكية',''],[['الموردون',f(c.ap)],['رأس المال',f(c.cap)],['الأرباح',f(c.net)],['<b>الإجمالي</b>',f(c.ap+eq)]])+`<p>فرق الميزانية: ${f(c.ta-c.ap-eq)}</p>`}
