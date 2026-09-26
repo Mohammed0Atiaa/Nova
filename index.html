@@ -86,11 +86,11 @@ const ENT={items:['الأصناف',[['name','الاسم'],['unit','الوحدة'
 const fld=([k,l,t])=>typeof t=='object'?sel('f_'+k,l,Object.entries(t)):typeof t=='string'&&D[t]?sel('f_'+k,l,[['','—'],...D[t].map(x=>[x.id,x.name])]):`<label>${l}<input id="f_${k}" type="${t||'text'}" ${t=='date'?`value="${today()}"`:''} step="any"></label>`;
 function crud(t){const[ti,F]=ENT[t];const extra=t=='items'?'<button onclick="impXlsx()">استيراد من Excel</button>':'';
  out(`<div class="card"><h3>${ti}</h3><div class="g">${F.map(fld).join('')}</div><div style="display:flex;gap:8px"><button class="go" onclick="addR('${t}')">حفظ</button>${extra}</div></div><div class="card">${tbl([...F.map(x=>x[1].split(' (')[0]),...(t=='items'?['التكلفة']:[]),''],D[t].map(r=>[...F.map(([k,,ty])=>esc(typeof ty=='object'?ty[r[k]]:(typeof ty=='string'&&D[ty])?nm(ty,r[k]):r[k])),...(t=='items'?[f(r.cost)]:[]),me.role=='manager'?`<button onclick="delR('${t}','${r.id}')">حذف</button>`:'']))}</div>`)}
-async function addR(t){const o={};ENT[t][1].forEach(([k,,ty])=>{let v=$('f_'+k).value;o[k]=v===''?null:ty=='number'?+v:v});const{error}=await sb.from(t).insert(o);if(error)return alert(error.message);await load();crud(t)}
+async function addR(t){const o={company_id:me.company_id};ENT[t][1].forEach(([k,,ty])=>{let v=$('f_'+k).value;o[k]=v===''?null:ty=='number'?+v:v});const{error}=await sb.from(t).insert(o);if(error)return alert(error.message);await load();crud(t)}
 async function delR(t,id){if(!confirm('حذف نهائي؟'))return;const{error}=await sb.from(t).delete().eq('id',id);if(error)return alert(error.message);await load();crud(t)}
 function impXlsx(){const inp=document.createElement('input');inp.type='file';inp.accept='.xlsx,.xls,.csv';
  inp.onchange=async()=>{const wb=XLSX.read(await inp.files[0].arrayBuffer());const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
-  const items=rows.map(r=>({name:r['الاسم']||r['name'],unit:r['الوحدة']||r['unit']||'قطعة',price:+(r['السعر']||r['price']||0)})).filter(x=>x.name);
+  const items=rows.map(r=>({company_id:me.company_id,name:r['الاسم']||r['name'],unit:r['الوحدة']||r['unit']||'قطعة',price:+(r['السعر']||r['price']||0)})).filter(x=>x.name);
   if(!items.length)return alert('لم يتم العثور على أعمدة الاسم/السعر');const{error}=await sb.from('items').insert(items);if(error)return alert(error.message);await load();crud('items')};inp.click()}
 /* ---------- إدارة الموظفين (المدير فقط) ---------- */
 function team(){out(`<div class="card"><h3>موظفو الشركة</h3><p>كود الدعوة: <b>${esc(co.invite_code)}</b> — أعطه لأي موظف جديد ليسجّل به.</p>
