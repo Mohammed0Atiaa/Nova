@@ -143,7 +143,7 @@ function invForm(retMode){lines=[];pays=[];const ks=me.role=='seller'?['sale']:O
  <label>تليفون العميل (لو جديد)<input id="pphone"></label>
  <label>التاريخ<input id="d" type="date" value="${today()}"></label><label>خصم<input id="x" type="number" value="0" onchange="drawPay()"></label></div>
  <div class="g">${sel('i','الصنف',D.items.filter(x=>x.active!==false).map(i=>[i.id,i.name+(i.sku?' ('+i.sku+')':'')]),'fillP()')}<label>الكمية<input id="q" type="number" step="any"></label><label>السعر<input id="r" type="number" step="any"></label><button onclick="addL()">+ إضافة</button></div><div id="sk"></div><div id="ls"></div>
- <div class="sec" id="methWrap"><h3>طريقة الدفع</h3>${sel('mth','طريقة الدفع',{cash:'نقدي',bank:'بنك'})}</div>
+ <div class="sec" id="methWrap"><h3>طريقة الدفع</h3>${sel('mth','طريقة الدفع',Object.entries({cash:'نقدي',bank:'بنك'}))}</div>
  <div class="sec" id="payWrap"><h3>الدفع</h3>${CURR.vat?`<div class="g"><label>ضريبة القيمة المضافة %<input id="taxr" type="number" value="${CURR.vatDefault||0}" onchange="drawPay()"></label></div>`:'<input type="hidden" id="taxr" value="0">'}<div class="g">${sel('pm','طريقة الدفع',Object.entries(PM))}<label>المبلغ<input id="pamt" type="number" step="any"></label><button onclick="addPay()">+ إضافة دفعة</button></div><div id="pl"></div></div>
  <button class="go" onclick="saveInv('${retMode?'sale_return':''}')">حفظ الفاتورة</button></div>`);fillP();drawL();drawPay();toggleKindUI()}
 function toggleKindUI(){const k=$('k')?$('k').value:'sale_return',isSale=['sale','sale_return'].includes(k);$('payWrap').hidden=!isSale;$('methWrap').hidden=isSale}
