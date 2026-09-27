@@ -43,8 +43,8 @@ a.lnk{color:var(--c);cursor:pointer;font-size:13px}
 <div id="login"><div class="card"><h1 style="margin:0">المحاسب الذكي</h1><p style="color:var(--m);margin:0 0 8px;font-size:12px">AI · يدعم XBRL</p>
 <div id="mode1"><input id="em" type="email" placeholder="البريد الإلكتروني" autocomplete="username"><input id="pw" type="password" placeholder="كلمة المرور" autocomplete="current-password"><button class="go" onclick="login()">دخول</button>
 <a class="lnk" style="display:block;margin-top:6px" onclick="fp()">نسيت كلمة المرور؟</a><a class="lnk" style="display:block;margin-top:6px" onclick="sw(2)">موظف جديد؟ سجّل بكود الشركة</a><a class="lnk" style="display:block;margin-top:6px" onclick="sw(3)">صاحب محل جديد؟ سجّل شركتك</a></div>
-<div id="mode2" hidden><input id="nm" placeholder="اسمك"><input id="em2" type="email" placeholder="البريد الإلكتروني"><input id="pw2" type="password" placeholder="كلمة مرور (6 أحرف فأكثر)"><input id="cc" placeholder="كود الشركة (من المدير)"><button class="go" onclick="signup()">تسجيل</button><a class="lnk" onclick="sw(1)">لديك حساب؟ دخول</a></div>
-<div id="mode3" hidden><input id="nm3" placeholder="اسمك"><input id="em3" type="email" placeholder="البريد الإلكتروني"><input id="pw3" type="password" placeholder="كلمة مرور (6 أحرف فأكثر)"><input id="cn3" placeholder="اسم الشركة / المحل"><button class="go" onclick="signupCompany()">تسجيل الشركة</button><a class="lnk" onclick="sw(1)">لديك حساب؟ دخول</a></div>
+<div id="mode2" hidden><input id="nm" placeholder="اسمك"><input id="em2" type="email" placeholder="البريد الإلكتروني"><input id="ph2" type="tel" placeholder="رقم الموبايل"><input id="pw2" type="password" placeholder="كلمة مرور (6 أحرف فأكثر)"><input id="cc" placeholder="كود الشركة (من المدير)"><button class="go" onclick="signup()">تسجيل</button><a class="lnk" onclick="sw(1)">لديك حساب؟ دخول</a></div>
+<div id="mode3" hidden><input id="nm3" placeholder="اسمك"><input id="em3" type="email" placeholder="البريد الإلكتروني"><input id="ph3" type="tel" placeholder="رقم الموبايل"><input id="pw3" type="password" placeholder="كلمة مرور (6 أحرف فأكثر)"><input id="cn3" placeholder="اسم الشركة / المحل"><button class="go" onclick="signupCompany()">تسجيل الشركة</button><a class="lnk" onclick="sw(1)">لديك حساب؟ دخول</a></div>
 <div id="msg"></div></div></div>
 <div id="pending" hidden><div class="card" style="max-width:420px;margin:20vh auto;text-align:center"><h3 id="pendMsg"></h3><button onclick="sb.auth.signOut().then(()=>location.reload())">خروج</button></div></div>
 <div id="app" hidden><div id="top"><div class="brand"><h1>المحاسب الذكي</h1><span style="display:block;font-size:11px;color:var(--m)">AI · يدعم XBRL</span><span id="coname"></span></div><span><span id="who"></span> <button onclick="sb.auth.signOut().then(()=>location.reload())">خروج</button></span></div><nav id="nav"></nav><main id="out"></main></div>
@@ -82,10 +82,10 @@ const T=['branches','warehouses','items','partners','invoices','invoice_lines','
 function sw(n){[1,2,3].forEach(i=>$('mode'+i).hidden=i!=n);$('msg').textContent=''}
 async function fp(){const e=$('em').value;if(!e)return $('msg').textContent='اكتب بريدك أولاً';await sb.auth.resetPasswordForEmail(e);$('msg').style.color='#7fffb0';$('msg').textContent='أُرسل رابط إعادة التعيين إلى بريدك'}
 async function login(){const{error}=await sb.auth.signInWithPassword({email:$('em').value,password:$('pw').value});if(error){$('msg').textContent='بيانات الدخول غير صحيحة';return}init()}
-async function signup(){const{error}=await sb.auth.signUp({email:$('em2').value,password:$('pw2').value});if(error)return $('msg').textContent=error.message;
- const{error:e2}=await sb.rpc('join_company',{p_code:$('cc').value.trim(),p_name:$('nm').value});if(e2)return $('msg').textContent=e2.message;init()}
-async function signupCompany(){const{error}=await sb.auth.signUp({email:$('em3').value,password:$('pw3').value});if(error)return $('msg').textContent=error.message;
- const{error:e2}=await sb.rpc('create_company_self',{p_company:$('cn3').value,p_owner_name:$('nm3').value});if(e2)return $('msg').textContent=e2.message;init()}
+async function signup(){if(!$('ph2').value.trim())return $('msg').textContent='رقم الموبايل مطلوب';const{error}=await sb.auth.signUp({email:$('em2').value,password:$('pw2').value});if(error)return $('msg').textContent=error.message;
+ const{error:e2}=await sb.rpc('join_company',{p_code:$('cc').value.trim(),p_name:$('nm').value,p_phone:$('ph2').value});if(e2)return $('msg').textContent=e2.message;init()}
+async function signupCompany(){if(!$('ph3').value.trim())return $('msg').textContent='رقم الموبايل مطلوب';const{error}=await sb.auth.signUp({email:$('em3').value,password:$('pw3').value});if(error)return $('msg').textContent=error.message;
+ const{error:e2}=await sb.rpc('create_company_self',{p_company:$('cn3').value,p_owner_name:$('nm3').value,p_phone:$('ph3').value});if(e2)return $('msg').textContent=e2.message;init()}
 async function init(){const{data:{user}}=await sb.auth.getUser();if(!user)return;
  const{data:p}=await sb.from('profiles').select('*').eq('id',user.id).single();
  if(!p){$('msg').textContent='أكمل التسجيل بكود الشركة أو سجّل شركة جديدة';sw(1);return}
@@ -95,6 +95,7 @@ async function init(){const{data:{user}}=await sb.auth.getUser();if(!user)return
  CURR=COUNTRIES[c.country]||COUNTRIES['الكويت'];
  if(c.status=='pending')return showPending('طلب تسجيل شركتك قيد المراجعة من إدارة النظام. سنتواصل معك قريباً.');
  if(c.status=='rejected')return showPending('عذراً، لم تتم الموافقة على طلبك. تواصل مع الدعم للمزيد.');
+ if(c.status=='suspended')return showPending('تم تعليق حساب شركتك مؤقتاً. تواصل مع الدعم لمزيد من التفاصيل.');
  if(c.status=='trial'&&c.trial_until&&c.trial_until<today())return showPending('انتهت فترتك التجريبية (7 أيام). تواصل مع الدعم للاشتراك الدائم.');
  me=p;co=c;$('login').hidden=true;$('app').hidden=false;$('who').textContent=p.name+' — '+RN[p.role];
  $('coname').textContent=c.name+(c.status=='trial'?' (تجربة حتى '+c.trial_until+')':'');await load();
@@ -108,10 +109,14 @@ function invRemaining(v){const p=D.invoice_payments.filter(x=>x.invoice_id==v.id
 /* ================= لوحة مسؤول النظام ================= */
 async function loadAdmin(){const{data}=await sb.from('companies').select('*').order('created_at',{ascending:false});D.__companies=data||[];
  const{data:st}=await sb.rpc('admin_company_stats');D.__stats=st||[]}
-function renderAdmin(){const pend=D.__companies.filter(c=>c.status=='pending'),all=D.__companies,stat=id=>D.__stats.find(s=>s.company_id==id)||{invoices_count:0,last_invoice:null,active_users:0};
+const STLABEL={active:'نشطة',trial:'تجربة',pending:'بانتظار الموافقة',rejected:'مرفوضة',suspended:'معلّقة'};
+function renderAdmin(){const pend=D.__companies.filter(c=>c.status=='pending'),all=D.__companies,stat=id=>D.__stats.find(s=>s.company_id==id)||{invoices_count:0,last_invoice:null,active_users:0,month_sales:0};
  out(`<div class="card"><h3>طلبات بانتظار الموافقة (${pend.length})</h3>${pend.length?tbl(['الشركة','تاريخ الطلب',''],pend.map(c=>[esc(c.name),new Date(c.created_at).toLocaleDateString('ar'),
   `<button onclick="adminAct('${c.id}','active')">✅ قبول دائم</button> <button onclick="adminAct('${c.id}','trial',7)">🕐 تجربة 7 أيام</button> <button onclick="adminAct('${c.id}','rejected')">❌ رفض</button>`])):'<p>لا توجد طلبات جديدة.</p>'}</div>
- <div class="card"><h3>كل الشركات (${all.length}/5) — مؤشرات استخدام فقط (بدون تفاصيل مالية)</h3>${tbl(['الاسم','الحالة','حتى','عدد الفواتير','آخر نشاط','موظفون مفعّلون'],all.map(c=>{const s=stat(c.id);return[esc(c.name),c.status,c.trial_until||'—',s.invoices_count,s.last_invoice||'لا يوجد نشاط بعد',s.active_users]}))}</div>`)}
+ <div class="card"><h3>كل الشركات (${all.length}/5) — مؤشرات مجمّعة فقط، بدون أي تفاصيل أو أسماء عملاء</h3><div class="g">${all.map(c=>{const s=stat(c.id);return`<div class="card" style="margin:4px"><b>🏢 ${esc(c.name)}</b><p style="color:var(--m);font-size:12px">${STLABEL[c.status]}${c.trial_until?' حتى '+c.trial_until:''}<br>عدد الفواتير: ${s.invoices_count} — آخر نشاط: ${s.last_invoice||'لا يوجد'}<br>مبيعات الشهر الحالي: ${f(s.month_sales)} — موظفون مفعّلون: ${s.active_users}</p>
+  <div style="display:flex;gap:6px;flex-wrap:wrap">${c.status!='suspended'?`<button onclick="adminAct('${c.id}','suspended')">⏸️ تعليق</button>`:''}${c.status!='active'?`<button onclick="adminAct('${c.id}','active')">▶️ تفعيل</button>`:''}<button onclick="adminDel('${c.id}','${esc(c.name)}')">🗑️ حذف نهائي</button></div></div>`}).join('')}</div></div>`)}
+async function adminDel(id,name){if(prompt('لحذف "'+name+'" نهائياً مع كل بياناته، اكتب: حذف')!='حذف')return;
+ const{error}=await sb.rpc('admin_delete_company',{p_company:id});if(error)return alert(error.message);await loadAdmin();renderAdmin()}
 async function adminAct(id,status,days){const{error}=await sb.rpc('admin_set_company',{p_company:id,p_status:status,p_trial_days:days||null});if(error)return alert(error.message);await loadAdmin();renderAdmin()}
 /* ================= لوحة مالية مبسّطة ================= */
 function insights(){const c=calc('',today());const lines=[];
@@ -199,7 +204,7 @@ function crud(t){const[ti,F]=ENT[t];const extra=t=='items'?'<button onclick="imp
  out(`<div class="card"><h3>${ti}</h3><div class="g">${F.map(fld).join('')}</div><div style="display:flex;gap:8px"><button class="go" onclick="addR('${t}')">حفظ</button>${extra}</div></div><div class="card">${tbl([...F.map(x=>x[1].split(' (')[0]),...(t=='items'?['التكلفة','نشط']:[]),...(t=='cheques'?['الحالة','']:[]),''],D[t].map(r=>[...F.map(([k,,ty])=>esc(typeof ty=='object'?ty[r[k]]:(typeof ty=='string'&&D[ty])?nm(ty,r[k]):r[k])),
   ...(t=='items'?[f(r.cost),r.active===false?'مؤرشف':'نشط']:[]),...(t=='cheques'?[r.status,r.status=='pending'?`<button onclick="chStatus('${r.id}','cleared')">تحصّل</button> <button onclick="chStatus('${r.id}','bounced')">ارتد</button>`:'']:[]),
   t=='items'?`<button onclick="archiveItem('${r.id}',${r.active===false})">${r.active===false?'إظهار':'أرشفة'}</button>`:(me.role=='manager'?`<button onclick="delR('${t}','${r.id}')">حذف</button>`:'')]))}</div>`)}
-async function addR(t){const o={};ENT[t][1].forEach(([k,,ty])=>{let v=$('f_'+k).value;o[k]=v===''?null:ty=='number'?+v:v});const{error}=await sb.from(t).insert(o);if(error)return alert(error.message);await load();crud(t)}
+async function addR(t){const o={company_id:me.company_id};ENT[t][1].forEach(([k,,ty])=>{let v=$('f_'+k).value;o[k]=v===''?null:ty=='number'?+v:v});const{error}=await sb.from(t).insert(o);if(error)return alert(error.message);await load();crud(t)}
 async function delR(t,id){if(!confirm('حذف نهائي؟'))return;const{error}=await sb.from(t).delete().eq('id',id);if(error)return alert(error.message);await load();crud(t)}
 async function archiveItem(id,toActive){const{error}=await sb.from('items').update({active:toActive}).eq('id',id);if(error)return alert(error.message);await load();crud('items')}
 async function chStatus(id,status){const{error}=await sb.from('cheques').update({status}).eq('id',id);if(error)return alert(error.message);await load();crud('cheques')}
@@ -234,17 +239,25 @@ async function closeShift(id,expected){const counted=+$('ccash').value||0,diff=c
 function exportBackup(){const blob=new Blob([JSON.stringify(D,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='backup-'+co.name+'-'+today()+'.json';a.click()}
 /* ================= إعدادات الشركة ================= */
 function settings(){out(`<div class="card"><h3>بيانات الشركة</h3><div class="g"><label>الاسم<input id="s_name" value="${esc(co.name)}"></label><label>الهاتف<input id="s_phone" value="${esc(co.phone||'')}"></label><label>العنوان<input id="s_addr" value="${esc(co.address||'')}"></label><label>رابط الشعار (اختياري)<input id="s_logo" value="${esc(co.logo_url||'')}"></label>${sel('s_bt','نوع النشاط',[['general','محل عادي (كود صنف)'],['supermarket','سوبر ماركت (باركود)']])}${sel('s_country','الدولة',Object.keys(COUNTRIES).map(k=>[k,k]))}<button class="go" onclick="saveSettings()">حفظ</button></div></div>
- <div class="card"><h3>نسخة احتياطية</h3><button onclick="exportBackup()">⬇️ تنزيل نسخة احتياطية الآن</button></div>`);$('s_bt').value=co.business_type;$('s_country').value=co.country||'الكويت'}
+ <div class="card"><h3>نسخة احتياطية</h3><button onclick="exportBackup()">⬇️ تنزيل نسخة احتياطية الآن</button></div>
+ <div class="card"><h3 style="color:#ff7a90">منطقة الخطر</h3><p style="color:var(--m);font-size:13px">حذف كل الفواتير والعمليات والمصروفات والتحويلات نهائياً (تبقى الأصناف والعملاء والمخازن كما هي). استخدمه لمسح بيانات التجربة قبل البدء الفعلي.</p><button onclick="resetCompany()">🗑️ حذف كل العمليات والبدء من جديد</button></div>`);$('s_bt').value=co.business_type;$('s_country').value=co.country||'الكويت'}
+async function resetCompany(){if(prompt('سيُحذف كل الفواتير والعمليات نهائياً ولا يمكن التراجع. اكتب: تصفير')!='تصفير')return;
+ const{error}=await sb.rpc('reset_company_data');if(error)return alert(error.message);await load();alert('تم تصفير بيانات العمليات بنجاح.');settings()}
 async function saveSettings(){const{error}=await sb.from('companies').update({name:$('s_name').value,phone:$('s_phone').value,address:$('s_addr').value,logo_url:$('s_logo').value,business_type:$('s_bt').value,country:$('s_country').value}).eq('id',co.id);
  if(error)return alert(error.message);const{data:c}=await sb.from('companies').select('*').eq('id',co.id).single();co=c;CURR=COUNTRIES[co.country]||COUNTRIES['الكويت'];$('coname').textContent=co.name;alert('تم الحفظ')}
 /* ================= إدارة الموظفين ================= */
 function team(){out(`<div class="card"><h3>موظفو الشركة</h3><p>كود الدعوة: <b>${esc(co.invite_code)}</b></p>
- ${tbl(['الاسم','الدور','الحالة',''],D.__profiles.map(p=>[esc(p.name),RN[p.role],p.active?'مفعّل':'معلّق',p.id==me.id?'':`
+ ${tbl(['الاسم','البريد الإلكتروني','الموبايل','الدور','الحالة',''],D.__profiles.map(p=>[esc(p.name),esc(p.email||'—'),esc(p.phone||'—'),RN[p.role],p.active?'مفعّل':'معلّق',p.id==me.id?'':`
   ${sel('r_'+p.id,'',[['seller','بائع'],['accountant','محاسب'],['warehouse','مسؤول مخزن']])+`<button onclick="setRole('${p.id}')">${p.active?'تحديث الدور':'تفعيل'}</button>`}
   ${p.active?`<button onclick="toggle('${p.id}',false)">تعطيل</button>`:''}`]))}</div>`)}
 async function setRole(id){const role=$('r_'+id).value;const{error}=await sb.from('profiles').update({role,active:true}).eq('id',id);if(error)return alert(error.message);await loadTeam();team()}
 async function toggle(id,active){const{error}=await sb.from('profiles').update({active}).eq('id',id);if(error)return alert(error.message);await loadTeam();team()}
-async function loadTeam(){const{data}=await sb.from('profiles').select('*').eq('company_id',me.company_id);D.__profiles=data||[]}
+async function loadTeam(){const{data}=await sb.rpc('company_team');D.__profiles=data||[]}
+/* ================= بروفايلي (لأي مستخدم) ================= */
+function myProfile(){out(`<div class="card"><h3>بروفايلي</h3><div class="g"><label>الاسم<input value="${esc(me.name)}" disabled></label><label>الدور<input value="${esc(RN[me.role])}" disabled></label><label>رقم الموبايل<input id="my_phone" value="${esc(me.phone||'')}"></label></div><button class="go" onclick="saveMyPhone()">حفظ الموبايل</button></div>
+ <div class="card"><h3>تغيير كلمة المرور</h3><div class="g"><label>كلمة المرور الجديدة<input id="new_pw" type="password"></label></div><button class="go" onclick="changeMyPw()">تحديث كلمة المرور</button></div>`)}
+async function saveMyPhone(){const{error}=await sb.rpc('update_my_profile',{p_phone:$('my_phone').value});if(error)return alert(error.message);me.phone=$('my_phone').value;alert('تم الحفظ')}
+async function changeMyPw(){const pw=$('new_pw').value;if(pw.length<6)return alert('6 أحرف على الأقل');const{error}=await sb.auth.updateUser({password:pw});if(error)return alert(error.message);alert('تم تحديث كلمة المرور')}
 /* ================= المحاسبة الآلية + التقارير ================= */
 function journal(from,to){const J=[],ok=d=>(!from||d>=from)&&(!to||d<=to),ac=m=>m=='cash'?'الصندوق':(m=='knet'||m=='card')?'البنك':0,pt=id=>(D.partners.find(p=>p.id==id)||{}).kind;
  D.invoices.filter(v=>ok(v.date)).forEach(v=>{const cg=D.invoice_lines.filter(l=>l.invoice_id==v.id).reduce((s,l)=>s+l.cost*l.qty,0),t=+v.total,c=v.kind.startsWith('sale'),e=(s,d,cr,a)=>J.push([v.date,s+' '+v.no,d,cr,a]);
@@ -295,6 +308,6 @@ async function doClose(){const u=$('cu').value;if(!u||!confirm('الإقفال �
 const TABS=[['d','لوحة','masw',dash],['i','فاتورة جديدة','mas',()=>invForm(false)],['ir','فاتورة مرتجع','mas',()=>invForm(true)],['l','الفواتير','mas',invList],['rc','سند قبض','ma',receipt],
  ['it','الأصناف','maw',()=>crud('items')],['p','الأطراف','ma',()=>crud('partners')],['pay','تحصيل وسداد','ma',()=>crud('payments')],['ex','مصروفات','ma',()=>crud('expenses')],
  ['tr','تحويل مخازن','maw',()=>crud('transfers')],['ch','الشيكات','ma',()=>crud('cheques')],['ac','المحاسبة','ma',accounting],['r','التقارير','ma',reports],['sh','الوردية','s',shift],
- ['w','المخازن','m',()=>crud('warehouses')],['b','الفروع','m',()=>crud('branches')],['tm','الموظفون','m',async()=>{await loadTeam();team()}],['st','الإعدادات','m',settings],['c','الإقفال','m',closing]];
+ ['w','المخازن','m',()=>crud('warehouses')],['b','الفروع','m',()=>crud('branches')],['tm','الموظفون','m',async()=>{await loadTeam();team()}],['st','الإعدادات','m',settings],['c','الإقفال','m',closing],['pr','بروفايلي','masw',myProfile]];
 init();
 </script></body></html>
