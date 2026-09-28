@@ -180,7 +180,104 @@ async function saveInv(force){if(!lines.length)return alert('أضف صنفاً')
 function pdfBar(id,phone){return `<div class="np"><button onclick="window.print()">🖨️ طباعة</button><button class="go" onclick="toPDF('${id}')">⬇️ تحويل PDF</button>${phone?`<button onclick="waSend('${phone}','${id}')">📲 واتساب</button>`:''}</div>`}
 function toPDF(id){html2pdf().from(document.getElementById(id)).set({filename:id+'.pdf',margin:0,html2canvas:{scale:2,backgroundColor:'#ffffff'},jsPDF:{unit:'mm',format:'a4'}}).save()}
 function waSend(phone,id){const el=document.getElementById(id),txt=el.querySelector('h3').textContent+' — '+esc(co.name);window.open('https://wa.me/'+phone.replace(/[^0-9]/g,'')+'?text='+encodeURIComponent(txt+'\n(مرفق ملف الفاتورة، جاري إرساله)'),'_blank')}
-function viewInv(no){const v=D.invoices.find(x=>x.no==no),L=D.invoice_lines.filter(l=>l.invoice_id==v.id),P=D.invoice_payments.filter(x=>x.invoice_id==v.id),rem=invRemaining(v),
+// ==========================================
+// 1️⃣ دالة تنظيف رقم الهاتف وإعداده بالصيغة الدولية
+// ==========================================
+function cleanPhoneNumber(phone, defaultCountryCode = '965') {
+  if (!phone) return '';
+  let cleaned = phone.replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/\D/g, '');
+  if (cleaned.startsWith('00')) cleaned = cleaned.substring(2);
+  if (cleaned.startsWith('0')) cleaned = defaultCountryCode + cleaned.substring(1);
+  if (!cleaned.startsWith(defaultCountryCode) && cleaned.length <= 8) cleaned = defaultCountryCode + cleaned;
+  return cleaned;
+}
+
+// ==========================================
+// 2️⃣ دالة الرفع إلى Supabase وإرسال رابط الواتساب
+// ==========================================
+async function sendInvoiceToWhatsApp(invoiceData, pdfBlob) {
+  try {
+    const invoiceNum = invoiceData.invoice_number || invoiceData.id || Date.now();
+    const fileName = `inv_${invoiceNum}_${Date.now()}.pdf`;
+
+    // رفع الـ PDF إلى Storage في Supabase (تأكد أن هين الحاوية اسمه invoices ومفتوح للعموم Public)
+    const { data: uploadData, error: uploadError } = await _supabase
+      .storage
+      .from('invoices')
+      .upload(fileName, pdfBlob, {
+        contentType: 'application/pdf',
+        upsert: true
+      });
+
+    if (uploadError) {
+      alert("❌ حدث خطأ أثناء رفع الفاتورة: " + uploadError.message);
+      return;
+    }
+
+    // جلب الرابط العام المباشر للفاتورة
+    const { data: urlData } = _supabase
+      .storage
+      .from('invoices')
+      .getPublicUrl(fileName);
+
+    const pdfUrl = urlData.publicUrl;
+
+    // تنظيف رقم الهاتف
+    const phone = cleanPhoneNumber(invoiceData.customer_phone || '', '965');
+    if (!phone) {
+      alert("❌ رقم هاتف العميل غير صحيح أو غير متوفر!");
+      return;
+    }
+
+    // صياغة النص
+    const storeName = "A&M فرش وكماليات السيارات";
+    const messageText = 
+`مرحباً بك! 🌹
+شرفتنا بالتعامل مع *${storeName}*.
+
+يمكنك عرض وتحميل فاتورة المبيعات رقم *#${invoiceNum}* عبر الرابط المباشر التالي:
+🔗 ${pdfUrl}
+
+شكراً لثقتكم بنا!`;
+
+    // فتح رابط الواتساب
+    const encodedMessage = encodeURIComponent(messageText);
+    const whatsappUrl = `https://wa.me/${phone}?text=${encodedMessage}`;
+    
+    window.open(whatsappUrl, '_blank');
+
+  } catch (err) {
+    console.error("WhatsApp Send Error:", err);
+    alert("❌ حدث خطأ غير متوقع أثناء الإرسال.");
+  }
+}
+ // ==========================================
+// 3️⃣ دالة تحويل الفاتورة لـ PDF ثم طلب الإرسال
+// ==========================================
+function handleWhatsAppButtonClick(invoiceData) {
+  // تأكد أن هذا الـ ID هو الخاص بالحاوية التي تظهر فيها الفاتورة للشاشة/الطباعة
+  const printArea = document.getElementById('invoice_print_area'); 
+
+  if (!printArea) {
+    alert("❌ لم يتم العثور على عنصر الفاتورة للطباعة!");
+    return;
+  }
+
+  const opt = {
+    margin:       0.5,
+    filename:     `invoice_${invoiceData.id || Date.now()}.pdf`,
+    image:        { type: 'jpeg', quality: 0.98 },
+    html2canvas:  { scale: 2 },
+    jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
+  };
+
+  // تحويل العنصر لـ PDF ثم رفعه وإرساله
+  html2pdf().set(opt).from(printArea).outputPdf('blob').then(function(pdfBlob) {
+    sendInvoiceToWhatsApp(invoiceData, pdfBlob);
+  });
+   }
+ 
+ function viewInv(no){const v=D.invoices.find(x=>x.no==no),L=D.invoice_lines.filter(l=>l.invoice_id==v.id),P=D.invoice_payments.filter(x=>x.invoice_id==v.id),rem=invRemaining(v),
  pt=D.partners.find(p=>p.id==v.partner_id),ed=v.updated_by?`<p class="tag">عُدّلت بواسطة: ${RN[v.updated_role]||v.updated_role}</p>`:'',bnm=(D.__profiles||[]).find(x=>x.id==v.created_by);
  out(`<div class="docwrap"><div class="doc" id="pv"><h2>${esc(co.name)}</h2><p class="sub">${esc(co.phone||'')}${co.phone&&co.address?' | ':''}${esc(co.address||'')}</p>
  <h3>${K[v.kind]} رقم ${v.no}</h3>
