@@ -54,13 +54,13 @@ a.lnk{color:var(--c);cursor:pointer;font-size:13px}
 <script>
 const SB_URL='https://xyrxmxydbsxfjvsgehel.supabase.co',SB_KEY='sb_publishable_ImWPCq_gkN0OXCVjJx8Ekg_QGjEpA6B';
 const sb=supabase.createClient(SB_URL,SB_KEY),$=i=>document.getElementById(i);
-const COUNTRIES={'الكويت':{code:'KWD',decimals:3,major:'دينار كويتي',minor:'فلس',minorPerMajor:1000,vat:false},
- 'مصر':{code:'EGP',decimals:2,major:'جنيه مصري',minor:'قرش',minorPerMajor:100,vat:true,vatDefault:14},
- 'السعودية':{code:'SAR',decimals:2,major:'ريال سعودي',minor:'هللة',minorPerMajor:100,vat:true,vatDefault:15},
- 'الإمارات':{code:'AED',decimals:2,major:'درهم إماراتي',minor:'فلس',minorPerMajor:100,vat:true,vatDefault:5},
- 'قطر':{code:'QAR',decimals:2,major:'ريال قطري',minor:'درهم',minorPerMajor:100,vat:false},
- 'البحرين':{code:'BHD',decimals:3,major:'دينار بحريني',minor:'فلس',minorPerMajor:1000,vat:true,vatDefault:10},
- 'عمان':{code:'OMR',decimals:3,major:'ريال عماني',minor:'بيسة',minorPerMajor:1000,vat:true,vatDefault:5}};
+const COUNTRIES={'الكويت':{code:'KWD',dial:'965',decimals:3,major:'دينار كويتي',minor:'فلس',minorPerMajor:1000,vat:false},
+ 'مصر':{code:'EGP',dial:'20',decimals:2,major:'جنيه مصري',minor:'قرش',minorPerMajor:100,vat:true,vatDefault:14},
+ 'السعودية':{code:'SAR',dial:'966',decimals:2,major:'ريال سعودي',minor:'هللة',minorPerMajor:100,vat:true,vatDefault:15},
+ 'الإمارات':{code:'AED',dial:'971',decimals:2,major:'درهم إماراتي',minor:'فلس',minorPerMajor:100,vat:true,vatDefault:5},
+ 'قطر':{code:'QAR',dial:'974',decimals:2,major:'ريال قطري',minor:'درهم',minorPerMajor:100,vat:false},
+ 'البحرين':{code:'BHD',dial:'973',decimals:3,major:'دينار بحريني',minor:'فلس',minorPerMajor:1000,vat:true,vatDefault:10},
+ 'عمان':{code:'OMR',dial:'968',decimals:3,major:'ريال عماني',minor:'بيسة',minorPerMajor:1000,vat:true,vatDefault:5}};
 let CURR=COUNTRIES['الكويت'];
 function numToWords(n){if(n==0)return 'صفر';
  const ones=['','واحد','اثنان','ثلاثة','أربعة','خمسة','ستة','سبعة','ثمانية','تسعة'],teens=['عشرة','أحد عشر','اثنا عشر','ثلاثة عشر','أربعة عشر','خمسة عشر','ستة عشر','سبعة عشر','ثمانية عشر','تسعة عشر'],
@@ -114,8 +114,8 @@ function renderAdmin(){const pend=D.__companies.filter(c=>c.status=='pending'),a
  out(`<div class="card"><h3>طلبات بانتظار الموافقة (${pend.length})</h3>${pend.length?tbl(['الشركة','تاريخ الطلب',''],pend.map(c=>[esc(c.name),new Date(c.created_at).toLocaleDateString('ar'),
   `<button onclick="adminAct('${c.id}','active')">✅ قبول دائم</button> <button onclick="adminAct('${c.id}','trial',7)">🕐 تجربة 7 أيام</button> <button onclick="adminAct('${c.id}','rejected')">❌ رفض</button>`])):'<p>لا توجد طلبات جديدة.</p>'}</div>
  <div class="card"><h3>كل الشركات (${all.length}/5) — مؤشرات مجمّعة فقط، بدون أي تفاصيل أو أسماء عملاء</h3><div class="g">${all.map(c=>{const s=stat(c.id);return`<div class="card" style="margin:4px"><b>🏢 ${esc(c.name)}</b><p style="color:var(--m);font-size:12px">${STLABEL[c.status]}${c.trial_until?' حتى '+c.trial_until:''}<br>عدد الفواتير: ${s.invoices_count} — آخر نشاط: ${s.last_invoice||'لا يوجد'}<br>مبيعات الشهر الحالي: ${f(s.month_sales)} — موظفون مفعّلون: ${s.active_users}</p>
-  <div style="display:flex;gap:6px;flex-wrap:wrap">${c.status!='suspended'?`<button onclick="adminAct('${c.id}','suspended')">⏸️ تعليق</button>`:''}${c.status!='active'?`<button onclick="adminAct('${c.id}','active')">▶️ تفعيل</button>`:''}<button onclick="adminDel('${c.id}','${esc(c.name)}')">🗑️ حذف نهائي</button></div></div>`}).join('')}</div></div>`)}
-async function adminDel(id,name){if(prompt('لحذف "'+name+'" نهائياً مع كل بياناته، اكتب: حذف')!='حذف')return;
+  <div style="display:flex;gap:6px;flex-wrap:wrap">${c.status!='suspended'?`<button onclick="adminAct('${c.id}','suspended')">⏸️ تعليق</button>`:''}${c.status!='active'?`<button onclick="adminAct('${c.id}','active')">▶️ تفعيل</button>`:''}<button onclick="adminDel('${c.id}')">🗑️ حذف نهائي</button></div></div>`}).join('')}</div></div>`)}
+async function adminDel(id){const name=(D.__companies.find(c=>c.id==id)||{}).name||'';if(prompt('لحذف "'+name+'" نهائياً مع كل بياناته، اكتب: حذف')!='حذف')return;
  const{error}=await sb.rpc('admin_delete_company',{p_company:id});if(error)return alert(error.message);await loadAdmin();renderAdmin()}
 async function adminAct(id,status,days){const{error}=await sb.rpc('admin_set_company',{p_company:id,p_status:status,p_trial_days:days||null});if(error)return alert(error.message);await loadAdmin();renderAdmin()}
 /* ================= لوحة مالية مبسّطة ================= */
@@ -177,107 +177,22 @@ async function saveInv(force){if(!lines.length)return alert('أضف صنفاً')
   if(error)return alert(error.message);pid=data.id;await load()}
  const{data,error}=await sb.rpc('save_invoice',{h:{kind:k,date:dt,partner_id:pid,warehouse_id:$('w').value,discount:+$('x').value||0,tax,method:isSale?'cash':$('mth').value},ls:lines,pays:isSale?pays:[]});
  if(error)return alert(error.message);await load();viewInv(data)}
-function pdfBar(id,phone){return `<div class="np"><button onclick="window.print()">🖨️ طباعة</button><button class="go" onclick="toPDF('${id}')">⬇️ تحويل PDF</button>${phone?`<button onclick="waSend('${phone}','${id}')">📲 واتساب</button>`:''}</div>`}
+const _waPhones={},_pdfCache={};
+function pdfBar(id,phone){_waPhones[id]=phone||'';return `<div class="np"><button onclick="window.print()">🖨️ طباعة</button><button class="go" onclick="toPDF('${id}')">⬇️ تحويل PDF</button>${phone?`<button onclick="waSend('${id}')">📲 واتساب</button>`:''}</div>`}
 function toPDF(id){html2pdf().from(document.getElementById(id)).set({filename:id+'.pdf',margin:0,html2canvas:{scale:2,backgroundColor:'#ffffff'},jsPDF:{unit:'mm',format:'a4'}}).save()}
-function waSend(phone,id){const el=document.getElementById(id),txt=el.querySelector('h3').textContent+' — '+esc(co.name);window.open('https://wa.me/'+phone.replace(/[^0-9]/g,'')+'?text='+encodeURIComponent(txt+'\n(مرفق ملف الفاتورة، جاري إرساله)'),'_blank')}
-// ==========================================
-// 1️⃣ دالة تنظيف رقم الهاتف وإعداده بالصيغة الدولية
-// ==========================================
-function cleanPhoneNumber(phone, defaultCountryCode = '965') {
-  if (!phone) return '';
-  let cleaned = phone.replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/\D/g, '');
-  if (cleaned.startsWith('00')) cleaned = cleaned.substring(2);
-  if (cleaned.startsWith('0')) cleaned = defaultCountryCode + cleaned.substring(1);
-  if (!cleaned.startsWith(defaultCountryCode) && cleaned.length <= 8) cleaned = defaultCountryCode + cleaned;
-  return cleaned;
-}
-
-// ==========================================
-// 2️⃣ دالة الرفع إلى Supabase وإرسال رابط الواتساب
-// ==========================================
-async function sendInvoiceToWhatsApp(invoiceData, pdfBlob) {
-  try {
-    const invoiceNum = invoiceData.invoice_number || invoiceData.id || Date.now();
-    const fileName = `inv_${invoiceNum}_${Date.now()}.pdf`;
-
-    // رفع الـ PDF إلى Storage في Supabase (تأكد أن هين الحاوية اسمه invoices ومفتوح للعموم Public)
-    const { data: uploadData, error: uploadError } = await _supabase
-      .storage
-      .from('invoices')
-      .upload(fileName, pdfBlob, {
-        contentType: 'application/pdf',
-        upsert: true
-      });
-
-    if (uploadError) {
-      alert("❌ حدث خطأ أثناء رفع الفاتورة: " + uploadError.message);
-      return;
-    }
-
-    // جلب الرابط العام المباشر للفاتورة
-    const { data: urlData } = _supabase
-      .storage
-      .from('invoices')
-      .getPublicUrl(fileName);
-
-    const pdfUrl = urlData.publicUrl;
-
-    // تنظيف رقم الهاتف
-    const phone = cleanPhoneNumber(invoiceData.customer_phone || '', '965');
-    if (!phone) {
-      alert("❌ رقم هاتف العميل غير صحيح أو غير متوفر!");
-      return;
-    }
-
-    // صياغة النص
-    const storeName = "A&M فرش وكماليات السيارات";
-    const messageText = 
-`مرحباً بك! 🌹
-شرفتنا بالتعامل مع *${storeName}*.
-
-يمكنك عرض وتحميل فاتورة المبيعات رقم *#${invoiceNum}* عبر الرابط المباشر التالي:
-🔗 ${pdfUrl}
-
-شكراً لثقتكم بنا!`;
-
-    // فتح رابط الواتساب
-    const encodedMessage = encodeURIComponent(messageText);
-    const whatsappUrl = `https://wa.me/${phone}?text=${encodedMessage}`;
-    
-    window.open(whatsappUrl, '_blank');
-
-  } catch (err) {
-    console.error("WhatsApp Send Error:", err);
-    alert("❌ حدث خطأ غير متوقع أثناء الإرسال.");
-  }
-}
- // ==========================================
-// 3️⃣ دالة تحويل الفاتورة لـ PDF ثم طلب الإرسال
-// ==========================================
-function handleWhatsAppButtonClick(invoiceData) {
-  // تأكد أن هذا الـ ID هو الخاص بالحاوية التي تظهر فيها الفاتورة للشاشة/الطباعة
-  const printArea = document.getElementById('invoice_print_area'); 
-
-  if (!printArea) {
-    alert("❌ لم يتم العثور على عنصر الفاتورة للطباعة!");
-    return;
-  }
-
-  const opt = {
-    margin:       0.5,
-    filename:     `invoice_${invoiceData.id || Date.now()}.pdf`,
-    image:        { type: 'jpeg', quality: 0.98 },
-    html2canvas:  { scale: 2 },
-    jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
-  };
-
-  // تحويل العنصر لـ PDF ثم رفعه وإرساله
-  html2pdf().set(opt).from(printArea).outputPdf('blob').then(function(pdfBlob) {
-    sendInvoiceToWhatsApp(invoiceData, pdfBlob);
-  });
-   }
- 
- function viewInv(no){const v=D.invoices.find(x=>x.no==no),L=D.invoice_lines.filter(l=>l.invoice_id==v.id),P=D.invoice_payments.filter(x=>x.invoice_id==v.id),rem=invRemaining(v),
+function normPhone(ph){let d=String(ph||'').replace(/\D/g,'').replace(/^00/,'');d=d.replace(/^0+/,'');return d.length<=10?CURR.dial+d:d}
+async function waSend(id){const el=document.getElementById(id),phone=_waPhones[id];if(!phone)return alert('لا يوجد رقم هاتف للعميل');
+ const title=el.querySelector('h3').textContent,w=window.open('about:blank','_blank');
+ try{let url=_pdfCache[id+title];
+  if(!url){const blob=await html2pdf().from(el).set({margin:0,html2canvas:{scale:2,backgroundColor:'#ffffff'},jsPDF:{unit:'mm',format:'a4'}}).outputPdf('blob');
+   const path=me.company_id+'/'+crypto.randomUUID()+'.pdf';
+   const up=await sb.storage.from('invoices').upload(path,blob,{contentType:'application/pdf'});if(up.error)throw up.error;
+   const sg=await sb.storage.from('invoices').createSignedUrl(path,60*60*24*30);if(sg.error)throw sg.error;
+   url=sg.data.signedUrl;_pdfCache[id+title]=url}
+  const msg='مرحباً بك! 🌹\nشرفتنا بالتعامل مع '+co.name+'.\nيمكنك عرض وتحميل '+title+' عبر الرابط التالي:\n🔗 '+url+'\n(الرابط صالح لمدة 30 يوماً)\nشكراً لثقتكم بنا!';
+  const link='https://wa.me/'+normPhone(phone)+'?text='+encodeURIComponent(msg);if(w)w.location.href=link;else location.href=link}
+ catch(e){if(w)w.close();alert('تعذّر تجهيز رابط الفاتورة: '+(e.message||e))}}
+function viewInv(no){const v=D.invoices.find(x=>x.no==no),L=D.invoice_lines.filter(l=>l.invoice_id==v.id),P=D.invoice_payments.filter(x=>x.invoice_id==v.id),rem=invRemaining(v),
  pt=D.partners.find(p=>p.id==v.partner_id),ed=v.updated_by?`<p class="tag">عُدّلت بواسطة: ${RN[v.updated_role]||v.updated_role}</p>`:'',bnm=(D.__profiles||[]).find(x=>x.id==v.created_by);
  out(`<div class="docwrap"><div class="doc" id="pv"><h2>${esc(co.name)}</h2><p class="sub">${esc(co.phone||'')}${co.phone&&co.address?' | ':''}${esc(co.address||'')}</p>
  <h3>${K[v.kind]} رقم ${v.no}</h3>
